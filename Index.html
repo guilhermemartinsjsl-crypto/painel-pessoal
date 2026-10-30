@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b1220">
+<title>Carteira de Investimento Visual</title>
+<style>
+  :root{
+    --bg:#0b1220; --card:#121a2b; --card2:#18233a; --txt:#e6edf7; --mut:#8a9bb5;
+    --brd:#24324d; --acc:#22c55e; --acc2:#16a34a; --warn:#f59e0b; --bad:#ef4444; --track:#24324d;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f3f6fb; --card:#ffffff; --card2:#f7f9fc; --txt:#0f172a; --mut:#5b6b85; --brd:#dbe3ef; --track:#e2e8f0; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt)}
+  .wrap{max-width:1150px;margin:0 auto;padding:16px}
+  header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+  h1{font-size:1.4rem;margin:0}
+  h2{font-size:1.05rem;margin:0 0 12px}
+  .sub{color:var(--mut);font-size:.85rem}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+  .kpi{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:14px}
+  .kpi .v{font-size:1.3rem;font-weight:700;margin-top:4px}
+  .card{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:16px;margin-bottom:16px}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .chartbox{text-align:center;position:relative}
+  .chartbox canvas{width:100%;height:320px;display:block;touch-action:manipulation}
+  .tip{position:absolute;pointer-events:none;z-index:5;background:var(--card2);color:var(--txt);border:1px solid var(--brd);border-radius:8px;padding:8px 10px;font-size:.8rem;text-align:left;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25);transform:translate(-50%,-115%)}
+  .tip b{display:block;font-size:.95rem;margin:2px 0}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:center;margin-top:10px}
+  .legend button{background:none;border:none;color:var(--txt);padding:3px 6px;font-size:.82rem;font-weight:500;border-radius:6px}
+  .legend button:hover{background:var(--card2)}
+  .legend button i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+  .det{margin-top:14px;background:var(--card2);border:1px solid var(--brd);border-radius:12px;padding:14px}
+  .det-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+  .det-h h3{margin:0;font-size:1.05rem;display:flex;align-items:center;gap:8px}
+  .det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .det-grid div{background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:10px}
+  .det-grid span{display:block;font-size:.75rem;color:var(--mut);margin-bottom:2px}
+  .det-grid b{font-size:1.02rem}
+  .tblwrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:.88rem}
+  th,td{padding:8px 6px;border-bottom:1px solid var(--brd);text-align:left;white-space:nowrap;vertical-align:middle}
+  th{color:var(--mut);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.03em}
+  td.num,th.num{text-align:right}
+  td.wrap{white-space:normal}
+  tfoot td{font-weight:700;border-top:2px solid var(--brd);border-bottom:none}
+  input[type=text],input[type=number]{background:var(--card2);color:var(--txt);border:1px solid var(--brd);border-radius:8px;padding:7px 8px;font-size:.9rem;width:100%;min-width:70px}
+  input.money{text-align:right;font-variant-numeric:tabular-nums}
+  input:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+  .w-meta{max-width:80px}.w-val{max-width:150px}
+  button{cursor:pointer;border:none;border-radius:8px;padding:9px 14px;font-weight:600;font-size:.88rem}
+  .btn{background:var(--acc);color:#04130a}.btn:hover{background:var(--acc2)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn2{background:var(--card2);color:var(--txt);border:1px solid var(--brd)}
+  .btnsm{padding:5px 10px;font-size:.78rem}
+  .btnx{background:transparent;color:var(--bad);padding:4px 8px;font-size:1rem}
+  .btnx.armed{background:var(--bad);color:#fff;font-size:.75rem;font-weight:700}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.78rem;font-weight:600}
+  .ok{background:rgba(34,197,94,.15);color:var(--acc)}
+  .wa{background:rgba(245,158,11,.15);color:var(--warn)}
+  .ba{background:rgba(239,68,68,.15);color:var(--bad)}
+  .msg{margin-top:10px;font-size:.88rem}
+  .bar{height:6px;background:var(--track);border-radius:4px;overflow:hidden;min-width:60px}
+  .bar b{display:block;height:100%}
+  .lock{font-size:.75rem;color:var(--mut);margin-left:4px}
+  .nomefixo{font-weight:600}
+  .hint{font-size:.72rem;color:var(--mut);display:block;margin-top:2px}
+  .rs{position:relative;display:inline-block;width:100%}
+  .rs::before{content:"R$";position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:.8rem;pointer-events:none}
+  .rs input{padding-left:32px}
+  .ap-grid{display:grid;grid-template-columns:minmax(220px,1fr) minmax(300px,1.8fr);gap:16px;align-items:start}
+  @media (max-width:700px){.ap-grid{grid-template-columns:1fr}}
+  .ap-input{font-size:1.3rem !important;font-weight:700;padding:12px 12px 12px 40px !important;margin-top:6px}
+  .rs.big::before{font-size:1rem;left:12px;top:calc(50% + 3px)}
+  .ap-right{background:var(--card2);border:1px solid var(--brd);border-radius:12px;padding:12px}
+  .sg-head,.sg{display:grid;grid-template-columns:12px minmax(90px,1fr) 110px 140px;gap:6px 10px;align-items:center}
+  .sg-head{font-size:.72rem;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;padding-bottom:6px;border-bottom:1px solid var(--brd)}
+  .sg{padding:8px 0;border-bottom:1px solid var(--brd)}
+  .sg:last-child{border-bottom:none}
+  .sg .dot{width:12px;height:12px;border-radius:3px}
+  .sg .nm{font-weight:600;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sg .vl{font-weight:700;font-size:.95rem;text-align:right}
+  .sg .dt{grid-column:2 / 5;font-size:.75rem;color:var(--mut)}
+  .sg input{padding:6px 8px 6px 30px;font-size:.85rem}
+  @media (max-width:480px){
+    .sg-head,.sg{grid-template-columns:12px 1fr 100px}
+    .sg-head .c4{display:none}
+    .sg .rcell{grid-column:2 / 4}
+    .sg .dt{grid-column:2 / 4}
+  }
+  .ap-total{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:2px solid var(--brd);font-weight:700}
+  .tag{display:inline-block;padding:1px 7px;border-radius:999px;font-size:.7rem;font-weight:700;margin-left:6px}
+  #toast{position:sticky;bottom:12px;margin:0 auto;max-width:420px;text-align:center;padding:10px 14px;border-radius:10px;background:var(--card2);border:1px solid var(--brd);font-size:.88rem}
+  .tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--brd)}
+  .tabs button{background:none;color:var(--mut);border-radius:8px 8px 0 0;border-bottom:3px solid transparent;padding:10px 14px}
+  .tabs button[aria-selected="true"]{color:var(--txt);border-bottom-color:var(--acc)}
+  .filtros label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--mut)}
+  select{background:var(--card2);color:var(--txt);border:1px solid var(--brd);border-radius:8px;padding:8px;font-size:.9rem;min-width:170px}
+  select:focus{outline:2px solid var(--acc)}
+  tr.clic{cursor:pointer} tr.clic:hover td{background:var(--card2)}
+  tr.sel td{background:rgba(34,197,94,.08)}
+  .banner{background:rgba(245,158,11,.12);border:1px solid var(--warn);color:var(--txt);border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;font-size:.88rem}
+  .edit-on{outline:2px dashed var(--warn);outline-offset:4px;border-radius:8px}
+  input:disabled{opacity:.75;cursor:not-allowed}
+  .hidden{display:none !important}
+  footer{color:var(--mut);font-size:.75rem;text-align:center;padding:10px 0 24px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <div>
+      <h1>📈 Carteira de Investimento Visual</h1>
+      <div class="sub">Rebalanceamento por aporte · dados salvos só neste navegador</div>
+    </div>
+    <div class="row">
+      <button type="button" class="btn2" id="btnExport">⬇ Exportar backup</button>
+      <button type="button" class="btn2" id="btnImport">⬆ Importar backup</button>
+      <input type="file" id="fileImport" accept=".json,application/json" class="hidden">
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Telas">
+    <button type="button" role="tab" id="tabPainel" data-tab="painel" aria-selected="true">📊 Painel</button>
+    <button type="button" role="tab" id="tabSalva" data-tab="salva" aria-selected="false">💾 Carteira salva</button>
+    <button type="button" role="tab" id="tabHist" data-tab="hist" aria-selected="false">🗂️ Histórico mensal</button>
+  </nav>
+
+  <div class="banner hidden" id="bannerBackup"></div>
+
+  <div id="telaPainel">
+  <section class="kpis">
+    <div class="kpi"><div class="sub">Patrimônio total</div><div class="v" id="kTotal">R$ 0,00</div></div>
+    <div class="kpi"><div class="sub">Total aportado (histórico)</div><div class="v" id="kAportes">R$ 0,00</div></div>
+    <div class="kpi"><div class="sub">Oportunidade × (Ações + FII)</div><div class="v" id="kOport">—</div></div>
+    <div class="kpi"><div class="sub">Maior desvio</div><div class="v" id="kDesvio">—</div></div>
+    <div class="kpi"><div class="sub">Aportado no mês × meta</div><div class="v" id="kMesAp">R$ 0,00</div><div class="sub" id="kMesMeta"></div></div>
+  </section>
+
+  <section class="card">
+    <h2>Carteira atual × Carteira ideal</h2>
+    <div class="grid2">
+      <div class="chartbox"><div class="sub">Atual</div><canvas id="cAtual" aria-label="Gráfico da carteira atual"></canvas><div class="tip hidden" id="tipAtual"></div></div>
+      <div class="chartbox"><div class="sub">Ideal (meta)</div><canvas id="cMeta" aria-label="Gráfico da carteira ideal"></canvas><div class="tip hidden" id="tipMeta"></div></div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="sub" style="text-align:center;margin-top:6px">Passe o mouse no gráfico para ver os valores · clique em uma fatia (ou na legenda) para ver os detalhes</div>
+    <div class="det hidden" id="detalhe" aria-live="polite"></div>
+  </section>
+
+  <section class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <h2 style="margin:0">Categorias e metas <span class="lock" id="lockMetas">🔒 metas travadas</span></h2>
+      <div class="row">
+        <button type="button" class="btn2 hidden" id="btnAdd">+ Categoria</button>
+        <button type="button" class="btn2 hidden" id="btnCancelMetas">Cancelar</button>
+        <button type="button" class="btn2" id="btnEditMetas">✏️ Editar metas</button>
+        <button type="button" class="btn" id="btnSalvarCart">💾 Salvar</button>
+      </div>
+    </div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr>
+          <th>Categoria</th><th class="num">Meta</th><th class="num">Valor atual</th>
+          <th class="num">% atual</th><th class="num">% ideal</th><th>Distribuição</th><th class="num">Desvio</th><th></th>
+        </tr></thead>
+        <tbody id="tbCat"></tbody>
+      </table>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <label for="inMetaAp" class="sub">Meta de aporte mensal</label>
+      <span class="rs" style="max-width:180px"><input type="text" inputmode="numeric" class="money" id="inMetaAp" placeholder="0,00" disabled></span>
+    </div>
+    <div class="msg" id="msgMeta" aria-live="polite"></div>
+    <div class="msg" id="msgSalva" aria-live="polite"></div>
+    <div class="sub" style="margin-top:6px">
+      Metas, meta de aporte e categorias ficam salvas e travadas — só mudam quando você clicar em <b>✏️ Editar metas</b> e depois em <b>Salvar metas</b>. O “Valor atual” pode ser atualizado a qualquer momento.<br>
+      🔒 Ações, Fundos Imobiliários, Caixa e Oportunidade são fixas. As metas de todas as categorias (exceto Oportunidade) devem somar 100%.
+      A <b>Oportunidade</b> é calculada à parte: no mínimo <b>10% do valor somado de Ações + Fundos Imobiliários</b>.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🎯 Quanto eu deveria ter em cada categoria</h2>
+    <div class="sub" style="margin-bottom:8px">Espelho das metas aplicado ao seu patrimônio total atual.</div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Categoria</th><th class="num">% ideal</th><th class="num">Deveria ter</th><th class="num">Tenho hoje</th><th class="num">Diferença</th></tr></thead>
+        <tbody id="tbIdeal"></tbody>
+        <tfoot id="tfIdeal"></tfoot>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>💰 Novo aporte</h2>
+    <div class="ap-grid">
+      <div>
+        <label for="inAporte" class="sub">Valor disponível para aportar</label>
+        <span class="rs big"><input type="text" inputmode="numeric" autocomplete="off" id="inAporte" placeholder="0,00" class="ap-input money"></span>
+        <div class="msg" id="msgAporte" aria-live="polite"></div>
+        <div class="row" style="margin-top:12px">
+          <button type="button" class="btn" id="btnConfirmar" disabled>✔ Confirmar aporte</button>
+          <button type="button" class="btn2" id="btnLimpar">Limpar</button>
+        </div>
+        <div class="sub" style="margin-top:10px">
+          Na coluna <b>“Aportei de fato”</b> você pode informar o que realmente aplicou.
+          Se deixar tudo em branco, vale exatamente a sugestão.
+        </div>
+      </div>
+      <div class="ap-right">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <div class="sub">Onde aportar (conforme o balanceamento)</div>
+          <button type="button" class="btn2 btnsm" id="btnCopiar" disabled>Copiar sugestão</button>
+        </div>
+        <div class="sg-head"><span></span><span>Categoria</span><span style="text-align:right">Sugerido</span><span class="c4">Aportei de fato</span></div>
+        <div id="painelSug"></div>
+        <div class="ap-total" id="sugTotal" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <h2 style="margin:0">🗓️ Histórico de aportes</h2>
+      <button type="button" class="btn2" id="btnReset" style="color:var(--bad)">Zerar tudo</button>
+    </div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Data do aporte</th><th class="num">Valor aportado</th><th>Distribuição</th><th></th></tr></thead>
+        <tbody id="tbHist"></tbody>
+      </table>
+    </div>
+  </section>
+
+  </div><!-- /telaPainel -->
+
+  <div id="telaSalva" class="hidden">
+    <section class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0">💾 Carteira salva</h2>
+        <button type="button" class="btn2" id="btnVoltarPainel">← Voltar ao painel</button>
+      </div>
+      <div class="sub" id="sSub" style="margin-top:8px"></div>
+    </section>
+    <section class="kpis" id="sKpis"></section>
+    <section class="card" id="sCard">
+      <div class="tblwrap"><table>
+        <thead><tr><th>Categoria</th><th class="num">Meta</th><th class="num">% ideal</th><th class="num">Valor ideal</th><th class="num">Valor real</th><th class="num">% real</th><th class="num">Diferença</th></tr></thead>
+        <tbody id="tbSalva"></tbody>
+        <tfoot id="tfSalva"></tfoot>
+      </table></div>
+    </section>
+  </div><!-- /telaSalva -->
+
+  <div id="telaHist" class="hidden">
+    <section class="card">
+      <h2>🗂️ Histórico mensal</h2>
+      <div class="sub" style="margin-bottom:12px">No <b>último dia de cada mês</b> (30, 31, 28 ou 29) o mês é fechado automaticamente com a <b>última carteira salva</b>. Se você não alterou nada, a mesma carteira salva é repetida no fechamento. Depois de fechado, o mês não muda mais.</div>
+      <div class="row filtros">
+        <label>Mês<select id="fMes"></select></label>
+        <label>Dia do aporte<select id="fDia"></select></label>
+        <button type="button" class="btn2" id="fLimpar" style="align-self:flex-end">Limpar filtros</button>
+      </div>
+    </section>
+
+    <section class="kpis" id="hKpis"></section>
+
+    <section class="card">
+      <h2>Resumo por mês</h2>
+      <div class="sub" style="margin-bottom:8px">Clique em um mês para ver o fechamento detalhado.</div>
+      <div class="tblwrap"><table>
+        <thead><tr><th>Mês</th><th>Status</th><th class="num">Patrimônio</th><th class="num">Meta de aporte</th><th class="num">Aportado</th><th class="num">% da meta</th><th class="num">Nº aportes</th></tr></thead>
+        <tbody id="tbMeses"></tbody>
+      </table></div>
+    </section>
+
+    <section class="card hidden" id="cardFech">
+      <h2 id="hFechTit"></h2>
+      <div class="sub" id="hFechSub" style="margin-bottom:8px"></div>
+      <div class="tblwrap"><table>
+        <thead><tr><th>Categoria</th><th class="num">Meta</th><th class="num">% ideal</th><th class="num">Valor ideal</th><th class="num">Valor real</th><th class="num">% real</th><th class="num">Diferença</th></tr></thead>
+        <tbody id="tbFech"></tbody>
+        <tfoot id="tfFech"></tfoot>
+      </table></div>
+    </section>
+
+    <section class="card">
+      <h2 id="hApTit">Aportes</h2>
+      <div class="tblwrap"><table>
+        <thead><tr><th>Data</th><th>Dia da semana</th><th class="num">Valor</th><th>Tipo</th><th>Distribuição</th></tr></thead>
+        <tbody id="tbHAp"></tbody>
+      </table></div>
+    </section>
+  </div><!-- /telaHist -->
+
+  <div id="toast" class="hidden" role="status" aria-live="polite"></div>
+  <footer>Ferramenta de cálculo de alocação. Não constitui recomendação de investimento.</footer>
+</div>
+
+<script>
+(function(){
+  const KEY = 'minha_carteira_v1';
+  const MIN_OPORT = 10;
+  const MAX_VAL = 1e12;
+  const FIXAS = [
+    {id:'fx_acoes', nome:'Ações',               meta:50, cor:'#3b82f6'},
+    {id:'fx_fii',   nome:'Fundos Imobiliários', meta:30, cor:'#f59e0b'},
+    {id:'fx_caixa', nome:'Caixa',               meta:20, cor:'#22c55e'},
+    {id:'fx_oport', nome:'Oportunidade',        meta:10, cor:'#a855f7'}
+  ];
+  const CORES_EXTRA = ['#ef4444','#14b8a6','#ec4899','#eab308','#6366f1','#84cc16','#06b6d4','#f97316'];
+  const $ = id => document.getElementById(id);
+
+  /* ---------- Formatação de dinheiro (padrão BR: 1.234.567,89) ---------- */
+  const nf2 = new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const money = v => nf2.format(Number(v)||0);                // 1.234,56
+  const fmt = v => 'R$ ' + money(v);                          // R$ 1.234,56
+  const pct = v => (isFinite(v)?v:0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+  const r2 = v => Math.round((Number(v)||0)*100)/100;
+  // texto "1.234,56" -> 1234.56
+  function parseMoney(s){
+    s = String(s||'').trim(); if(!s) return 0;
+    const n = parseFloat(s.replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.'));
+    return isFinite(n) && n > 0 ? Math.min(MAX_VAL, r2(n)) : 0;
+  }
+  // máscara: digita só números, os 2 últimos são centavos
+  function maskMoney(el){
+    let d = el.value.replace(/\D/g,'').replace(/^0+/,'').slice(0,14);
+    el.value = d ? money(parseInt(d,10)/100) : '';
+  }
+
+  const dataBR = d => new Date(d).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+  const uid = () => 'c_'+Math.random().toString(36).slice(2,10);
+  const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const numPct = v => { const n = parseFloat(String(v).replace(',','.')); return isFinite(n) && n > 0 ? Math.round(n*100)/100 : 0; };
+  const numAny = v => { const n = Number(v); return isFinite(n) && n > 0 ? r2(n) : 0; };
+  const isFixa = id => FIXAS.some(f=>f.id===id);
+  const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+
+  /* ---------- Estado ---------- */
+  function garantirFixas(s){
+    s.categorias = Array.isArray(s.categorias) ? s.categorias : [];
+    s.historico = Array.isArray(s.historico) ? s.historico : [];
+    const usadas = new Set();
+    const fixas = FIXAS.map(f=>{
+      const c = s.categorias.find(x=>x.id===f.id) || s.categorias.find(x=>!isFixa(x.id) && norm(x.nome)===norm(f.nome));
+      const r = {id:f.id, nome:f.nome, meta: c ? numPct(c.meta) : f.meta, valor: c ? numAny(c.valor) : 0};
+      if(f.id==='fx_oport' && r.meta < MIN_OPORT) r.meta = MIN_OPORT;
+      if(c) usadas.add(c);
+      return r;
+    });
+    const extras = s.categorias.filter(x=>!usadas.has(x) && !isFixa(x.id))
+      .map(x=>({id:x.id||uid(), nome:String(x.nome||'Sem nome').slice(0,40), meta:numPct(x.meta), valor:numAny(x.valor)}));
+    s.categorias = fixas.concat(extras);
+    s.historico = s.historico.filter(h=>h && h.data && !isNaN(new Date(h.data))).map(h=>({data:h.data, aporte:numAny(h.aporte), seguiu: h.seguiu, itens:Array.isArray(h.itens)?h.itens:[]}));
+    s.meses = (s.meses && typeof s.meses==='object' && !Array.isArray(s.meses)) ? s.meses : {};
+    s.metaAporteMensal = numAny(s.metaAporteMensal);
+    s.ultimoBackup = s.ultimoBackup || null;
+    s.salva = (s.salva && Array.isArray(s.salva.categorias)) ? s.salva : null;
+    return s;
+  }
+  function carregar(){
+    try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s) return garantirFixas(s); }catch(e){}
+    return garantirFixas({categorias:[],historico:[]});
+  }
+  let state = carregar();
+  let proposta = null;
+  let detSel = null;
+  let editMetas = false, backupMetas = null;
+  let fMes = '', fDia = '';
+
+  /* ---------- Meses ---------- */
+  const mesKey = d => { const x = new Date(d); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0'); };
+  const ultimoDia = k => { const [y,m] = k.split('-').map(Number); return new Date(y, m, 0); };
+  const nomeMes = k => { const [y,m] = k.split('-').map(Number); const t = new Date(y,m-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'}); return t.charAt(0).toUpperCase()+t.slice(1); };
+  const dataCurta = d => new Date(d).toLocaleDateString('pt-BR');
+  const fechado = k => k < mesKey(new Date());
+  // grava a "fotografia" do mês atual; ao virar o mês ela fica congelada (fechamento do último dia)
+  function fotoAtual(){
+    const t = total(), P = pesosIdeais();
+    return {
+      atualizadoEm: new Date().toISOString(),
+      total: r2(t),
+      metaAporte: state.metaAporteMensal || 0,
+      categorias: cats().map((c,i)=>({id:c.id, nome:c.nome, meta:c.meta, idealPct: Math.round(P[i]*10000)/100, valor:c.valor, idealR: r2(P[i]*t)}))
+    };
+  }
+  const proxMes = k => { let [y,m] = k.split('-').map(Number); m++; if(m>12){m=1;y++;} return y+'-'+String(m).padStart(2,'0'); };
+  /* Fechamento automático: todo mês que terminou usando a última carteira salva.
+     Se você não alterou nada, a mesma carteira salva vira o fechamento do mês. */
+  function fecharPendentes(){
+    const sv = state.salva; if(!sv) return;
+    const atual = mesKey(new Date());
+    let k = mesKey(sv.atualizadoEm);
+    while(k < atual){
+      const reg = state.meses[k];
+      if(!reg || !reg.fechamento){
+        state.meses[k] = Object.assign(JSON.parse(JSON.stringify(sv)), {fechamento:true, fechadoAuto:true,
+          fechadoEm: ultimoDia(k).toISOString(), origem: mesKey(sv.atualizadoEm)===k ? 'salva' : 'sem-alteracao'});
+      }
+      k = proxMes(k);
+    }
+    if(sv) state.meses[atual] = Object.assign(JSON.parse(JSON.stringify(sv)), {fechamento:false});
+  }
+  const chaveComp = o => JSON.stringify({c:o.categorias.map(c=>[c.id,c.nome,c.meta,r2(c.valor)]), m:o.metaAporte||0});
+  const temAlteracao = () => !state.salva || chaveComp(fotoAtual()) !== chaveComp(state.salva);
+  function salvarCarteira(irPara){
+    if(editMetas){
+      if(!metasOk()){ toast('As metas (sem Oportunidade) precisam somar 100% para salvar.'); return false; }
+      state.metaAporteMensal = parseMoney($('inMetaAp').value);
+      editMetas = false; backupMetas = null;
+    }
+    if(!metasOk()){ toast('As metas precisam somar 100% para salvar.'); return false; }
+    fecharPendentes();                 // fecha meses anteriores com a versão antiga antes de substituir
+    state.salva = fotoAtual();         // substitui a carteira salva
+    fecharPendentes();                 // atualiza o registro do mês corrente
+    salvar(); render();
+    if(irPara) trocarTela('salva');
+    return true;
+  }
+  const salvar = () => { try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} };
+
+  const cats = () => state.categorias;
+  const cat = id => state.categorias.find(c=>c.id===id);
+  const corDe = c => { const f = FIXAS.find(x=>x.id===c.id); if(f) return f.cor;
+    const i = state.categorias.filter(x=>!isFixa(x.id)).indexOf(c); return CORES_EXTRA[Math.max(0,i) % CORES_EXTRA.length]; };
+  const total = () => cats().reduce((a,c)=>a+(c.valor||0),0);
+  const somaMetaBase = () => Math.round(cats().filter(c=>c.id!=='fx_oport').reduce((a,c)=>a+(c.meta||0),0)*100)/100;
+  const metasOk = () => Math.abs(somaMetaBase()-100) < 0.01;
+
+  /* Base (todas menos Oportunidade) soma 100%. Oportunidade = r × (Ações + FII). */
+  function pesosIdeais(){
+    const r = cat('fx_oport').meta/100;
+    const af = (cat('fx_acoes').meta + cat('fx_fii').meta)/100;
+    const k = 1 + r*af;
+    return cats().map(c => c.id==='fx_oport' ? (r*af)/k : (c.meta/100)/k);
+  }
+
+  /* ---------- Gráficos de pizza com rótulos ---------- */
+  const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function donut(canvas, valores, cores, rotulos, centro){
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth || 300, h = canvas.clientHeight || 320;
+    canvas.width = w*dpr; canvas.height = h*dpr;
+    const ctx = canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+    const cx = w/2, cy = h/2;
+    const r = Math.max(50, Math.min(h/2 - 34, w/2 - 92));
+    const ri = r*0.42;
+    const tot = valores.reduce((a,b)=>a+b,0);
+    canvas._segs = []; canvas._geo = {cx, cy, r, ri};
+    const txt = cssVar('--txt'), mut = cssVar('--mut');
+    if(tot <= 0){
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.arc(cx,cy,ri,0,2*Math.PI,true); ctx.fillStyle = cssVar('--track'); ctx.fill();
+    } else {
+      let a = -Math.PI/2; const fora = [];
+      // fatias
+      valores.forEach((v,i)=>{ if(v<=0) return; const g = v/tot*2*Math.PI;
+        canvas._segs.push({i, a0:a, a1:a+g, mid:a+g/2, g});
+        ctx.beginPath(); ctx.arc(cx,cy,r,a,a+g); ctx.arc(cx,cy,ri,a+g,a,true); ctx.closePath();
+        ctx.fillStyle = cores[i]; ctx.fill();
+        ctx.lineWidth = 1.5; ctx.strokeStyle = cssVar('--card'); ctx.stroke();
+        if(detSel && cats()[i] && cats()[i].id===detSel){ ctx.lineWidth = 3; ctx.strokeStyle = txt; ctx.stroke(); }
+        a += g; });
+      // rótulos
+      const rl = (r+ri)/2;
+      canvas._segs.forEach(s=>{
+        const [l1,l2] = rotulos[s.i];
+        ctx.font = '700 12px Segoe UI, sans-serif'; const w1 = ctx.measureText(l1).width;
+        ctx.font = '600 11px Segoe UI, sans-serif'; const w2 = ctx.measureText(l2).width;
+        const tw = Math.max(w1,w2), arco = s.g*rl, esp = r-ri;
+        if(arco >= Math.min(tw, esp*1.6)+6 && s.g >= 0.42 && tw <= esp*1.9){
+          const x = cx + Math.cos(s.mid)*rl, y = cy + Math.sin(s.mid)*rl;
+          ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.lineJoin='round'; ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.fillStyle='#fff';
+          ctx.font = '700 12px Segoe UI, sans-serif'; ctx.strokeText(l1,x,y-7); ctx.fillText(l1,x,y-7);
+          ctx.font = '600 11px Segoe UI, sans-serif'; ctx.strokeText(l2,x,y+8); ctx.fillText(l2,x,y+8);
+        } else fora.push(s);
+      });
+      // rótulos externos (fatias pequenas), sem sobreposição
+      ['dir','esq'].forEach(lado=>{
+        const L = fora.filter(s => (Math.cos(s.mid) >= 0) === (lado==='dir'))
+          .map(s=>({s, y: cy + Math.sin(s.mid)*(r+16)})).sort((p,q)=>p.y-q.y);
+        let ult = -1e9;
+        L.forEach(p=>{ p.y = Math.max(p.y, ult + 30); ult = p.y; });
+        const exc = L.length ? L[L.length-1].y - (h-16) : 0;
+        if(exc > 0) L.forEach(p=> p.y -= exc);
+        L.forEach(p=>{
+          const s = p.s, [l1,l2] = rotulos[s.i];
+          const x0 = cx + Math.cos(s.mid)*r, y0 = cy + Math.sin(s.mid)*r;
+          const x1 = cx + Math.cos(s.mid)*(r+10), y1 = cy + Math.sin(s.mid)*(r+10);
+          const xt = lado==='dir' ? cx + r + 18 : cx - r - 18;
+          ctx.strokeStyle = cores[s.i]; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.lineTo(xt,p.y); ctx.stroke();
+          ctx.textAlign = lado==='dir' ? 'left' : 'right'; ctx.textBaseline='middle';
+          const xx = lado==='dir' ? xt+4 : xt-4;
+          ctx.fillStyle = txt; ctx.font = '700 12px Segoe UI, sans-serif'; ctx.fillText(l1, xx, p.y-7);
+          ctx.fillStyle = mut; ctx.font = '600 11px Segoe UI, sans-serif'; ctx.fillText(l2, xx, p.y+8);
+        });
+      });
+    }
+    // centro
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle = mut; ctx.font = '600 11px Segoe UI, sans-serif'; ctx.fillText(centro[0], cx, cy-9);
+    let fs = 14; ctx.font = `700 ${fs}px Segoe UI, sans-serif`;
+    while(ctx.measureText(centro[1]).width > ri*1.8 && fs > 8){ fs--; ctx.font = `700 ${fs}px Segoe UI, sans-serif`; }
+    ctx.fillStyle = txt; ctx.fillText(centro[1], cx, cy+8);
+  }
+  function desenharGraficos(){
+    const L = cats(), t = total(), P = pesosIdeais(), cores = L.map(corDe);
+    donut($('cAtual'), L.map(c=>c.valor), cores,
+      L.map(c=>[pct(t>0?c.valor/t*100:0), fmt(c.valor)]), ['Total atual', fmt(t)]);
+    donut($('cMeta'), P, cores,
+      L.map((c,i)=>[pct(P[i]*100), t>0 ? fmt(P[i]*t) : '—']), ['Total ideal', fmt(t)]);
+  }
+
+  /* ---------- Render ---------- */
+  function render(){
+    const t = total(), P = pesosIdeais(), L = cats();
+    $('kTotal').textContent = fmt(t);
+    $('kAportes').textContent = fmt(state.historico.reduce((a,h)=>a+h.aporte,0));
+    const af = cat('fx_acoes').valor + cat('fx_fii').valor, op = cat('fx_oport').valor;
+    if(af > 0){ const r = op/af*100; $('kOport').textContent = pct(r); $('kOport').style.color = r >= MIN_OPORT-0.05 ? 'var(--acc)' : 'var(--bad)'; }
+    else { $('kOport').textContent = '—'; $('kOport').style.color=''; }
+
+    const kAtual = mesKey(new Date());
+    const apMes = state.historico.filter(h=>mesKey(h.data)===kAtual).reduce((a,h)=>a+h.aporte,0);
+    $('kMesAp').textContent = fmt(apMes);
+    const mA = state.metaAporteMensal;
+    $('kMesMeta').innerHTML = mA > 0 ? `meta ${fmt(mA)} · <b style="color:${apMes>=mA-0.005?'var(--acc)':'var(--warn)'}">${pct(apMes/mA*100)}</b>` : 'defina a meta mensal em “Editar metas”';
+
+    let maior = null;
+    $('tbCat').innerHTML = L.map((c,i)=>{
+      const atual = t>0 ? c.valor/t*100 : 0, ideal = P[i]*100, desv = t>0 ? atual-ideal : 0;
+      if(t>0 && (!maior || Math.abs(desv)>Math.abs(maior.d))) maior = {n:c.nome,d:desv};
+      const cls = Math.abs(desv)<2 ? 'ok' : (Math.abs(desv)<5 ? 'wa' : 'ba');
+      const fixa = isFixa(c.id), op = c.id==='fx_oport';
+      const nome = fixa
+        ? `<span class="nomefixo">${esc(c.nome)}</span><span class="lock">🔒</span>`
+        : `<input type="text" aria-label="Nome da categoria" data-id="${c.id}" data-f="nome" value="${esc(c.nome)}" style="max-width:190px;display:inline-block;width:calc(100% - 20px)" ${editMetas?'':'disabled'}>`;
+      const meta = `<input type="number" class="w-meta" aria-label="Meta ${esc(c.nome)}" min="${op?MIN_OPORT:0}" max="100" step="0.5" data-id="${c.id}" data-f="meta" value="${c.meta}" ${editMetas?'':'disabled'}>`
+        + (op ? `<span class="hint">% de Ações+FII (mín. ${MIN_OPORT}%)</span>` : '');
+      return `<tr>
+        <td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${corDe(c)};margin-right:6px"></span>${nome}</td>
+        <td class="num">${meta}</td>
+        <td class="num"><span class="rs w-val" style="display:inline-block"><input type="text" inputmode="numeric" class="money" aria-label="Valor atual ${esc(c.nome)}" data-id="${c.id}" data-f="valor" value="${money(c.valor)}"></span></td>
+        <td class="num">${pct(atual)}</td>
+        <td class="num">${pct(ideal)}</td>
+        <td><div class="bar"><b style="width:${Math.min(100, ideal>0?atual/ideal*100:0)}%;background:${corDe(c)}"></b></div></td>
+        <td class="num">${t>0?`<span class="pill ${cls}">${desv>0?'+':''}${pct(desv)}</span>`:'—'}</td>
+        <td>${(fixa || !editMetas) ? '' : `<button type="button" class="btnx" data-del="${c.id}" aria-label="Excluir ${esc(c.nome)}" title="Excluir categoria">✕</button>`}</td>
+      </tr>`;
+    }).join('');
+    $('kDesvio').textContent = maior ? `${maior.d>0?'+':''}${pct(maior.d)}` : '—';
+    $('kDesvio').title = maior ? maior.n : '';
+
+    $('btnEditMetas').textContent = editMetas ? '💾 Salvar metas' : '✏️ Editar metas';
+    $('btnEditMetas').className = editMetas ? 'btn' : 'btn2';
+    $('btnAdd').classList.toggle('hidden', !editMetas);
+    $('btnCancelMetas').classList.toggle('hidden', !editMetas);
+    $('lockMetas').textContent = editMetas ? '✏️ editando metas' : '🔒 metas travadas';
+    $('tbCat').closest('.tblwrap').classList.toggle('edit-on', editMetas);
+    $('inMetaAp').disabled = !editMetas;
+    if(document.activeElement !== $('inMetaAp')) $('inMetaAp').value = state.metaAporteMensal ? money(state.metaAporteMensal) : '';
+
+    $('msgMeta').innerHTML = metasOk()
+      ? '<span class="pill ok">Metas somam 100% ✔</span>'
+      : `<span class="pill ba">As metas (sem Oportunidade) somam ${pct(somaMetaBase())} — ajuste para 100%.</span>`;
+
+    // Quanto eu deveria ter
+    $('tbIdeal').innerHTML = L.map((c,i)=>{
+      const deveria = P[i]*t, dif = deveria - c.valor;
+      const difTxt = t<=0 ? '—' : Math.abs(dif) < 0.05 ? '<span class="pill ok">Na meta</span>'
+        : dif > 0 ? `<span class="pill wa">Faltam ${fmt(dif)}</span>` : `<span class="pill ok">Acima ${fmt(-dif)}</span>`;
+      return `<tr>
+        <td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${corDe(c)};margin-right:6px"></span>${esc(c.nome)}</td>
+        <td class="num">${pct(P[i]*100)}</td>
+        <td class="num"><b>${fmt(deveria)}</b></td>
+        <td class="num">${fmt(c.valor)}</td>
+        <td class="num">${difTxt}</td></tr>`;
+    }).join('');
+    $('tfIdeal').innerHTML = `<tr><td>Total</td><td class="num">${pct(P.reduce((a,b)=>a+b,0)*100)}</td><td class="num">${fmt(t)}</td><td class="num">${fmt(t)}</td><td></td></tr>`;
+
+    $('legend').innerHTML = L.map(c=>`<button type="button" data-det="${c.id}" aria-pressed="${c.id===detSel}"><i style="background:${corDe(c)}"></i>${esc(c.nome)}</button>`).join('');
+
+    $('tbHist').innerHTML = state.historico.length
+      ? state.historico.map((h,idx)=>({h,idx})).reverse().map(({h,idx})=>`<tr>
+          <td>${dataBR(h.data)}${h.seguiu===true?'<span class="tag ok">Sugestão</span>':h.seguiu===false?'<span class="tag wa">Personalizado</span>':''}</td>
+          <td class="num"><b>${fmt(h.aporte)}</b></td>
+          <td class="wrap sub">${h.itens.filter(x=>x.valor>0).map(x=>`${esc(x.nome)}: ${fmt(x.valor)}`).join(' · ') || '—'}</td>
+          <td><button type="button" class="btnx" data-hdel="${idx}" title="Remover do histórico (não altera os valores das categorias)" aria-label="Remover registro">✕</button></td>
+        </tr>`).join('')
+      : '<tr><td colspan="4" class="sub">Nenhum aporte confirmado ainda.</td></tr>';
+
+    renderDetalhe();
+    desenharGraficos();
+    atualizarSugestao();
+    renderBanner();
+    const pend = temAlteracao();
+    $('msgSalva').innerHTML = !state.salva
+      ? '<span class="pill wa">Carteira ainda não salva — clique em 💾 Salvar para registrar.</span>'
+      : pend ? `<span class="pill wa">Alterações não salvas · última versão salva em ${dataBR(state.salva.atualizadoEm)}</span>`
+             : `<span class="pill ok">Tudo salvo ✔ ${dataBR(state.salva.atualizadoEm)}</span>`;
+    if(!$('telaHist').classList.contains('hidden')) renderHist();
+    if(!$('telaSalva').classList.contains('hidden')) renderSalva();
+  }
+
+  /* ---------- Lembrete de backup ---------- */
+  function renderBanner(){
+    const b = $('bannerBackup');
+    const fechadosSemBackup = Object.keys(state.meses).filter(k => fechado(k) && (!state.ultimoBackup || new Date(state.ultimoBackup) < new Date(ultimoDia(k).getTime()+86400000))).sort();
+    if(!fechadosSemBackup.length){ b.classList.add('hidden'); return; }
+    const k = fechadosSemBackup[fechadosSemBackup.length-1];
+    b.innerHTML = `<span>📌 <b>${nomeMes(k)}</b> foi fechado. Exporte o backup e guarde na sua nuvem pessoal para não perder o histórico.</span><button type="button" class="btn" id="bannerBtn">⬇ Exportar backup agora</button>`;
+    b.classList.remove('hidden');
+    $('bannerBtn').addEventListener('click', ()=> $('btnExport').click());
+  }
+
+  /* ---------- Tela: Histórico mensal ---------- */
+  const DIAS_SEM = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  function mesesDisponiveis(){
+    const set = new Set(Object.keys(state.meses));
+    state.historico.forEach(h=>set.add(mesKey(h.data)));
+    return Array.from(set).sort().reverse();
+  }
+  function renderHist(){
+    const meses = mesesDisponiveis();
+    if(fMes && !meses.includes(fMes)) fMes = '';
+    $('fMes').innerHTML = '<option value="">Todos os meses</option>' + meses.map(k=>`<option value="${k}" ${k===fMes?'selected':''}>${nomeMes(k)}</option>`).join('');
+    const apsMes = state.historico.filter(h=>!fMes || mesKey(h.data)===fMes);
+    const dias = Array.from(new Set(apsMes.map(h=>new Date(h.data).getDate()))).sort((a,b)=>a-b);
+    if(fDia && !dias.includes(Number(fDia))) fDia = '';
+    $('fDia').innerHTML = '<option value="">Todos os dias</option>' + dias.map(d=>`<option value="${d}" ${String(d)===String(fDia)?'selected':''}>Dia ${String(d).padStart(2,'0')}</option>`).join('');
+
+    const aps = apsMes.filter(h=>!fDia || new Date(h.data).getDate()===Number(fDia));
+    const totAp = aps.reduce((a,h)=>a+h.aporte,0);
+    const mesesMostrar = fMes ? [fMes] : meses;
+    $('hKpis').innerHTML = `
+      <div class="kpi"><div class="sub">Meses registrados</div><div class="v">${mesesMostrar.length}</div></div>
+      <div class="kpi"><div class="sub">Total aportado (filtro)</div><div class="v">${fmt(totAp)}</div></div>
+      <div class="kpi"><div class="sub">Nº de aportes (filtro)</div><div class="v">${aps.length}</div></div>
+      <div class="kpi"><div class="sub">Média por aporte</div><div class="v">${fmt(aps.length?totAp/aps.length:0)}</div></div>`;
+
+    $('tbMeses').innerHTML = mesesMostrar.length ? mesesMostrar.map(k=>{
+      const sn = state.meses[k], apsK = state.historico.filter(h=>mesKey(h.data)===k);
+      const ap = apsK.reduce((a,h)=>a+h.aporte,0), meta = sn ? sn.metaAporte : 0;
+      const st = fechado(k) ? `<span class="pill ok">Fechado em ${dataCurta(ultimoDia(k))}</span>` : `<span class="pill wa">Em andamento · fecha em ${dataCurta(ultimoDia(k))}</span>`;
+      const pm = meta > 0 ? `<span class="pill ${ap>=meta-0.005?'ok':'wa'}">${pct(ap/meta*100)}</span>` : '—';
+      return `<tr class="clic ${k===fMes?'sel':''}" data-mes="${k}" tabindex="0">
+        <td><b>${nomeMes(k)}</b></td><td>${st}</td>
+        <td class="num">${sn?fmt(sn.total):'<span class="sub">sem registro</span>'}</td>
+        <td class="num">${meta>0?fmt(meta):'—'}</td>
+        <td class="num"><b>${fmt(ap)}</b></td><td class="num">${pm}</td><td class="num">${apsK.length}</td></tr>`;
+    }).join('') : '<tr><td colspan="7" class="sub">Nenhum mês registrado ainda.</td></tr>';
+
+    // fechamento detalhado
+    const card = $('cardFech');
+    if(fMes){
+      const sn = state.meses[fMes];
+      card.classList.remove('hidden');
+      $('hFechTit').textContent = (fechado(fMes) ? '📁 Fechamento de ' : '📂 Prévia de ') + nomeMes(fMes);
+      if(sn){
+        $('hFechSub').textContent = fechado(fMes)
+          ? (sn.origem==='sem-alteracao'
+              ? `Fechado automaticamente em ${dataCurta(ultimoDia(fMes))} — sem alterações no mês, foi usada a carteira salva em ${dataBR(sn.atualizadoEm)}.`
+              : `Fechado em ${dataCurta(ultimoDia(fMes))} com a carteira salva em ${dataBR(sn.atualizadoEm)}.`)
+          : `Mês em andamento — será fechado automaticamente em ${dataCurta(ultimoDia(fMes))} com a última carteira salva (${dataBR(sn.atualizadoEm)}).`;
+        $('tbFech').innerHTML = sn.categorias.map(c=>{
+          const real = sn.total>0 ? c.valor/sn.total*100 : 0, dif = c.idealR - c.valor;
+          const corC = (cat(c.id) && corDe(cat(c.id))) || '#8a9bb5';
+          const dt = sn.total<=0 ? '—' : Math.abs(dif)<0.05 ? '<span class="pill ok">Na meta</span>' : dif>0 ? `<span class="pill wa">Faltavam ${fmt(dif)}</span>` : `<span class="pill ok">Acima ${fmt(-dif)}</span>`;
+          return `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${corC};margin-right:6px"></span>${esc(c.nome)}</td>
+            <td class="num">${pct(c.meta)}${c.id==='fx_oport'?' <span class="sub">(A+FII)</span>':''}</td><td class="num">${pct(c.idealPct)}</td>
+            <td class="num">${fmt(c.idealR)}</td><td class="num"><b>${fmt(c.valor)}</b></td><td class="num">${pct(real)}</td><td class="num">${dt}</td></tr>`;
+        }).join('');
+        $('tfFech').innerHTML = `<tr><td>Total</td><td></td><td class="num">100,0%</td><td class="num">${fmt(sn.total)}</td><td class="num">${fmt(sn.total)}</td><td class="num">100,0%</td><td></td></tr>`;
+      } else {
+        $('hFechSub').textContent = 'Não há fotografia da carteira para este mês (o app não foi aberto nele). Os aportes do mês aparecem abaixo.';
+        $('tbFech').innerHTML = ''; $('tfFech').innerHTML = '';
+      }
+    } else card.classList.add('hidden');
+
+    $('hApTit').textContent = 'Aportes' + (fMes ? ' · ' + nomeMes(fMes) : '') + (fDia ? ' · dia ' + String(fDia).padStart(2,'0') : '');
+    $('tbHAp').innerHTML = aps.length ? aps.slice().sort((a,b)=>new Date(b.data)-new Date(a.data)).map(h=>`<tr>
+        <td><b>${dataBR(h.data)}</b></td><td>${DIAS_SEM[new Date(h.data).getDay()]}</td>
+        <td class="num"><b>${fmt(h.aporte)}</b></td>
+        <td>${h.seguiu===true?'<span class="tag ok">Sugestão</span>':h.seguiu===false?'<span class="tag wa">Personalizado</span>':'—'}</td>
+        <td class="wrap sub">${h.itens.filter(x=>x.valor>0).map(x=>`${esc(x.nome)}: ${fmt(x.valor)}`).join(' · ') || '—'}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="sub">Nenhum aporte encontrado para o filtro.</td></tr>';
+  }
+  function renderSalva(){
+    const sv = state.salva;
+    if(!sv){
+      $('sSub').innerHTML = 'Nenhuma carteira salva ainda. Volte ao painel, ajuste metas e valores e clique em <b>💾 Salvar</b>.';
+      $('sKpis').innerHTML = ''; $('sCard').classList.add('hidden'); return;
+    }
+    $('sCard').classList.remove('hidden');
+    const k = mesKey(new Date());
+    $('sSub').innerHTML = `Salva em <b>${dataBR(sv.atualizadoEm)}</b>. Cada novo “Salvar” substitui esta versão.<br>
+      Se não houver nova alteração, esta carteira será usada automaticamente como <b>fechamento de ${nomeMes(k)}</b> em <b>${dataCurta(ultimoDia(k))}</b>.`
+      + (temAlteracao() ? '<br><span class="pill wa" style="margin-top:6px">Existem alterações no painel que ainda não foram salvas.</span>' : '');
+    const soma = sv.categorias.filter(c=>c.id!=='fx_oport').reduce((a,c)=>a+c.meta,0);
+    $('sKpis').innerHTML = `
+      <div class="kpi"><div class="sub">Patrimônio salvo</div><div class="v">${fmt(sv.total)}</div></div>
+      <div class="kpi"><div class="sub">Meta de aporte mensal</div><div class="v">${sv.metaAporte>0?fmt(sv.metaAporte):'—'}</div></div>
+      <div class="kpi"><div class="sub">Soma das metas</div><div class="v">${pct(soma)}</div></div>
+      <div class="kpi"><div class="sub">Categorias</div><div class="v">${sv.categorias.length}</div></div>`;
+    $('tbSalva').innerHTML = sv.categorias.map(c=>{
+      const real = sv.total>0 ? c.valor/sv.total*100 : 0, dif = c.idealR - c.valor;
+      const corC = (cat(c.id) && corDe(cat(c.id))) || '#8a9bb5';
+      const dt = sv.total<=0 ? '—' : Math.abs(dif)<0.05 ? '<span class="pill ok">Na meta</span>' : dif>0 ? `<span class="pill wa">Faltam ${fmt(dif)}</span>` : `<span class="pill ok">Acima ${fmt(-dif)}</span>`;
+      return `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${corC};margin-right:6px"></span>${esc(c.nome)}</td>
+        <td class="num">${pct(c.meta)}${c.id==='fx_oport'?' <span class="sub">(A+FII)</span>':''}</td><td class="num">${pct(c.idealPct)}</td>
+        <td class="num">${fmt(c.idealR)}</td><td class="num"><b>${fmt(c.valor)}</b></td><td class="num">${pct(real)}</td><td class="num">${dt}</td></tr>`;
+    }).join('');
+    $('tfSalva').innerHTML = `<tr><td>Total</td><td></td><td class="num">100,0%</td><td class="num">${fmt(sv.total)}</td><td class="num">${fmt(sv.total)}</td><td class="num">100,0%</td><td></td></tr>`;
+  }
+  function trocarTela(t){
+    ['painel','salva','hist'].forEach(n=>{
+      const tela = {painel:'telaPainel', salva:'telaSalva', hist:'telaHist'}[n];
+      const tab = {painel:'tabPainel', salva:'tabSalva', hist:'tabHist'}[n];
+      $(tela).classList.toggle('hidden', n!==t);
+      $(tab).setAttribute('aria-selected', String(n===t));
+    });
+    if(t==='hist') renderHist(); else if(t==='salva') renderSalva(); else desenharGraficos();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  $('tabSalva').addEventListener('click', ()=>trocarTela('salva'));
+  $('btnVoltarPainel').addEventListener('click', ()=>trocarTela('painel'));
+  $('btnSalvarCart').addEventListener('click', ()=>{ if(salvarCarteira(true)) toast('Carteira salva ✔'); });
+  $('tabPainel').addEventListener('click', ()=>trocarTela('painel'));
+  $('tabHist').addEventListener('click', ()=>trocarTela('hist'));
+  $('fMes').addEventListener('change', e=>{ fMes = e.target.value; fDia=''; renderHist(); });
+  $('fDia').addEventListener('change', e=>{ fDia = e.target.value; renderHist(); });
+  $('fLimpar').addEventListener('click', ()=>{ fMes=''; fDia=''; renderHist(); });
+  $('tbMeses').addEventListener('click', e=>{ const tr = e.target.closest('[data-mes]'); if(!tr) return; fMes = (fMes===tr.dataset.mes) ? '' : tr.dataset.mes; fDia=''; renderHist(); });
+  $('tbMeses').addEventListener('keydown', e=>{ if(e.key==='Enter'){ const tr = e.target.closest('[data-mes]'); if(tr) tr.click(); } });
+
+  /* ---------- Edição de metas (travadas por padrão) ---------- */
+  $('btnEditMetas').addEventListener('click', ()=>{
+    if(!editMetas){
+      backupMetas = JSON.stringify({categorias:state.categorias, metaAporteMensal:state.metaAporteMensal});
+      editMetas = true; render(); toast('Edição de metas liberada.'); return;
+    }
+    if(!metasOk()){ toast('As metas (sem Oportunidade) precisam somar 100% para salvar.'); return; }
+    state.metaAporteMensal = parseMoney($('inMetaAp').value);
+    editMetas = false; backupMetas = null; salvar(); render(); toast('Metas salvas e travadas 🔒');
+  });
+  $('btnCancelMetas').addEventListener('click', ()=>{
+    if(backupMetas){ const b = JSON.parse(backupMetas);
+      const valores = {}; state.categorias.forEach(c=>valores[c.id]=c.valor);
+      state.categorias = b.categorias.map(c=>({...c, valor: valores[c.id]!==undefined ? valores[c.id] : c.valor}));
+      state.metaAporteMensal = b.metaAporteMensal; }
+    editMetas = false; backupMetas = null; detSel = null; salvar(); render(); toast('Alterações de metas descartadas.');
+  });
+  $('inMetaAp').addEventListener('input', e=> maskMoney(e.target));
+
+  /* ---------- Detalhe da categoria ---------- */
+  function renderDetalhe(){
+    const box = $('detalhe'), L = cats(), i = L.findIndex(c=>c.id===detSel);
+    if(i < 0){ detSel = null; box.classList.add('hidden'); box.innerHTML=''; return; }
+    const c = L[i], t = total(), P = pesosIdeais();
+    const atual = t>0 ? c.valor/t*100 : 0, idealR = P[i]*t, dif = idealR - c.valor;
+    const aportes = state.historico.map(h=>{
+      const it = h.itens.find(x => x.id ? x.id===c.id : x.nome===c.nome);
+      return it && it.valor>0 ? {data:h.data, valor:it.valor} : null;
+    }).filter(Boolean);
+    const somaAp = aportes.reduce((a,b)=>a+b.valor,0);
+    let metaTxt = pct(c.meta) + ' (base)', extra = '';
+    if(c.id==='fx_oport'){
+      const af = cat('fx_acoes').valor + cat('fx_fii').valor, min = af*c.meta/100, ok = c.valor >= min-0.005;
+      metaTxt = `${pct(c.meta)} de Ações + FII`;
+      extra = `<div><span>Mínimo exigido hoje</span><b>${fmt(min)}</b></div>
+        <div><span>Situação do mínimo</span><b style="color:${ok?'var(--acc)':'var(--bad)'}">${ok?'Atingido ✔':'Faltam '+fmt(min-c.valor)}</b></div>`;
+    }
+    const st = t<=0 ? '<b>—</b>' : Math.abs(dif) < 0.05 ? '<b style="color:var(--acc)">Na meta ✔</b>'
+      : dif>0 ? `<b style="color:var(--warn)">Faltam ${fmt(dif)}</b>` : `<b style="color:var(--acc)">Acima ${fmt(-dif)}</b>`;
+    box.innerHTML = `
+      <div class="det-h">
+        <h3><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${corDe(c)}"></span>${esc(c.nome)}${isFixa(c.id)?'<span class="lock">🔒</span>':''}</h3>
+        <button type="button" class="btn2" id="btnFecharDet">✕ Fechar</button>
+      </div>
+      <div class="det-grid">
+        <div><span>Valor alocado hoje</span><b>${fmt(c.valor)}</b></div>
+        <div><span>% atual da carteira</span><b>${pct(atual)}</b></div>
+        <div><span>% ideal da carteira</span><b>${pct(P[i]*100)}</b></div>
+        <div><span>Valor ideal hoje</span><b>${fmt(idealR)}</b></div>
+        <div><span>Situação × meta</span>${st}</div>
+        <div><span>Meta definida</span><b>${metaTxt}</b></div>
+        ${extra}
+        <div><span>Total recebido em aportes</span><b>${fmt(somaAp)}</b></div>
+        <div><span>Nº de aportes recebidos</span><b>${aportes.length}</b></div>
+      </div>
+      <div class="sub" style="margin:12px 0 6px">Aportes nesta categoria</div>
+      <div class="tblwrap"><table>
+        <thead><tr><th>Data</th><th class="num">Valor</th></tr></thead>
+        <tbody>${aportes.length ? aportes.slice().reverse().map(a=>`<tr><td>${dataBR(a.data)}</td><td class="num">${fmt(a.valor)}</td></tr>`).join('')
+          : '<tr><td colspan="2" class="sub">Nenhum aporte registrado nesta categoria.</td></tr>'}</tbody>
+      </table></div>`;
+    box.classList.remove('hidden');
+    $('btnFecharDet').addEventListener('click', ()=> selecionar(null));
+  }
+  function selecionar(id){
+    detSel = id;
+    $('legend').querySelectorAll('[data-det]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.det===detSel)));
+    renderDetalhe(); desenharGraficos();
+    if(detSel) $('detalhe').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  /* ---------- Interação com os gráficos ---------- */
+  function hit(canvas, e){
+    const g = canvas._geo, segs = canvas._segs; if(!g || !segs || !segs.length) return null;
+    const rc = canvas.getBoundingClientRect(), x = e.clientX - rc.left, y = e.clientY - rc.top;
+    const dx = x - g.cx, dy = y - g.cy, d = Math.sqrt(dx*dx+dy*dy);
+    if(d < g.ri || d > g.r) return null;
+    let ang = Math.atan2(dy, dx); if(ang < -Math.PI/2) ang += 2*Math.PI;
+    const s = segs.find(s => ang >= s.a0 && ang < s.a1); return s ? {i:s.i, x, y} : null;
+  }
+  function tipHtml(tipo, i){
+    const c = cats()[i], t = total(), P = pesosIdeais(), atual = t>0 ? c.valor/t*100 : 0;
+    const bol = `<span style="color:${corDe(c)}">●</span> ${esc(c.nome)}`;
+    if(tipo==='atual') return `${bol}<b>${fmt(c.valor)}</b>${pct(atual)} da carteira`;
+    return `${bol}<b>${t>0?fmt(P[i]*t):pct(P[i]*100)}</b>Ideal ${pct(P[i]*100)} · hoje ${fmt(c.valor)}`;
+  }
+  function ligarGrafico(cid, tid, tipo){
+    const cv = $(cid), tip = $(tid);
+    cv.addEventListener('mousemove', e=>{
+      const h = hit(cv, e);
+      if(!h){ tip.classList.add('hidden'); cv.style.cursor='default'; return; }
+      cv.style.cursor = 'pointer';
+      tip.innerHTML = tipHtml(tipo, h.i);
+      tip.style.left = (cv.offsetLeft + h.x) + 'px';
+      tip.style.top = (cv.offsetTop + h.y) + 'px';
+      tip.classList.remove('hidden');
+    });
+    cv.addEventListener('mouseleave', ()=> tip.classList.add('hidden'));
+    cv.addEventListener('click', e=>{
+      const h = hit(cv, e); tip.classList.add('hidden'); if(!h) return;
+      const id = cats()[h.i].id; selecionar(detSel===id ? null : id);
+    });
+  }
+  ligarGrafico('cAtual','tipAtual','atual');
+  ligarGrafico('cMeta','tipMeta','ideal');
+  $('legend').addEventListener('click', e=>{
+    const b = e.target.closest('[data-det]'); if(!b) return;
+    selecionar(detSel === b.dataset.det ? null : b.dataset.det);
+  });
+
+  /* ---------- Cálculo do aporte ---------- */
+  function calcular(aporte){
+    const L = cats(), P = pesosIdeais(), novo = total() + aporte;
+    const def = L.map((c,i) => Math.max(0, P[i]*novo - c.valor));
+    const sd = def.reduce((a,b)=>a+b,0);
+    let aloc = sd > 0 ? def.map(d => d/sd*aporte) : P.map(p => p*aporte);
+    aloc = aloc.map(v => Math.floor(v*100)/100);
+    const resto = r2(aporte - aloc.reduce((a,b)=>a+b,0));
+    if(resto !== 0){ const k = aloc.indexOf(Math.max(...aloc)); aloc[k] = r2(aloc[k]+resto); }
+    return aloc;
+  }
+
+  const realInputs = () => Array.from($('painelSug').querySelectorAll('input[data-real]'));
+  function lerReal(){
+    const ins = realInputs(); const algum = ins.some(x=>x.value.trim()!=='');
+    if(!algum) return null;
+    const vals = cats().map(()=>0);
+    ins.forEach(x=>{ vals[parseInt(x.dataset.real,10)] = parseMoney(x.value); });
+    return vals;
+  }
+  function atualizarTotalReal(){
+    if(!proposta){ $('sugTotal').innerHTML=''; return; }
+    const real = lerReal();
+    if(!real){
+      $('sugTotal').innerHTML = `<span>Total a aportar <span class="tag ok">Seguindo a sugestão</span></span><span>${fmt(proposta.aporte)}</span>`;
+      $('btnConfirmar').disabled = false; return;
+    }
+    const tr = r2(real.reduce((a,b)=>a+b,0)), dif = r2(tr - proposta.aporte);
+    const aviso = Math.abs(dif) < 0.05 ? '<span class="tag ok">Bate com o disponível</span>'
+      : `<span class="tag wa">${dif>0?'+':'−'}${fmt(Math.abs(dif))} vs. disponível</span>`;
+    $('sugTotal').innerHTML = `<span>Total aportado de fato ${aviso}</span><span>${fmt(tr)}</span>`;
+    $('btnConfirmar').disabled = tr <= 0;
+  }
+
+  function atualizarSugestao(){
+    const raw = $('inAporte').value, v = parseMoney(raw), L = cats(), t = total(), P = pesosIdeais(), msg = $('msgAporte');
+    proposta = null; $('btnConfirmar').disabled = true; $('btnCopiar').disabled = true;
+    let aloc = null;
+    if(!metasOk()) msg.innerHTML = '<span class="pill ba">Ajuste as metas para somar 100% antes de aportar.</span>';
+    else if(raw !== '' && v <= 0) msg.innerHTML = '<span class="pill wa">Informe um valor maior que zero.</span>';
+    else if(v > 0){
+      aloc = calcular(v); proposta = {aporte:v, aloc}; $('btnCopiar').disabled = false;
+      msg.innerHTML = 'O valor vai para as categorias <b>abaixo da meta</b>, sem precisar vender nada.';
+    } else if(!msg.querySelector('.ok')) msg.textContent = 'Digite um valor para ver ao lado onde aportar.';
+    const novo = t + (aloc ? v : 0);
+    const ordem = L.map((c,i)=>i);
+    if(aloc) ordem.sort((a,b)=>aloc[b]-aloc[a]);
+    $('painelSug').innerHTML = ordem.map(i=>{
+      const c = L[i], atual = t>0 ? c.valor/t*100 : 0, val = aloc ? aloc[i] : null;
+      const apos = aloc && novo>0 ? (c.valor+val)/novo*100 : null;
+      return `<div class="sg"><span class="dot" style="background:${corDe(c)}"></span>
+        <span class="nm" title="${esc(c.nome)}">${val>0?'➜ ':''}${esc(c.nome)}</span>
+        <span class="vl" style="color:${val>0?'var(--acc)':'var(--mut)'}">${val===null?'—':fmt(val)}</span>
+        <span class="rcell"><span class="rs"><input type="text" inputmode="numeric" class="money" data-real="${i}" aria-label="Aportei de fato em ${esc(c.nome)}" placeholder="${val===null?'0,00':money(val)}" ${aloc?'':'disabled'}></span></span>
+        <span class="dt">Ideal ${pct(P[i]*100)} · atual ${pct(atual)}${apos!==null?` → após ${pct(apos)}`:''}</span></div>`;
+    }).join('');
+    atualizarTotalReal();
+  }
+
+  /* ---------- Utilidades de UI ---------- */
+  function toast(t){ const el=$('toast'); el.textContent=t; el.classList.remove('hidden'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.add('hidden'),3500); }
+  function armar(btn, textoArmado, acao){
+    if(btn.dataset.armed==='1'){ btn.dataset.armed=''; acao(); return; }
+    const orig = btn.textContent; btn.dataset.armed='1'; btn.textContent=textoArmado; btn.classList.add('armed');
+    setTimeout(()=>{ if(btn.isConnected && btn.dataset.armed==='1'){ btn.dataset.armed=''; btn.textContent=orig; btn.classList.remove('armed'); } },3000);
+  }
+
+  /* ---------- Eventos ---------- */
+  $('inAporte').addEventListener('input', e=>{ maskMoney(e.target); $('msgAporte').textContent=''; atualizarSugestao(); });
+  $('inAporte').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); if(!$('btnConfirmar').disabled) $('btnConfirmar').click(); } });
+  $('btnLimpar').addEventListener('click', ()=>{ $('inAporte').value=''; $('msgAporte').textContent=''; atualizarSugestao(); });
+  $('painelSug').addEventListener('input', e=>{ if(e.target.dataset.real!==undefined){ maskMoney(e.target); atualizarTotalReal(); } });
+  $('btnCopiar').addEventListener('click', ()=>{
+    if(!proposta) return;
+    realInputs().forEach(x=>{ x.value = money(proposta.aloc[parseInt(x.dataset.real,10)]); });
+    atualizarTotalReal();
+  });
+
+  $('btnConfirmar').addEventListener('click', ()=>{
+    if(!proposta) return;
+    const real = lerReal();
+    const aloc = real || proposta.aloc;
+    const soma = r2(aloc.reduce((a,b)=>a+b,0));
+    if(soma <= 0){ toast('Informe ao menos um valor aportado.'); return; }
+    const seguiu = !real || aloc.every((v,i)=>Math.abs(v - proposta.aloc[i]) < 0.01);
+    cats().forEach((c,i)=>{ c.valor = Math.min(MAX_VAL, r2(c.valor + aloc[i])); });
+    state.historico.push({ data:new Date().toISOString(), aporte:soma, seguiu,
+      itens: cats().map((c,i)=>({id:c.id, nome:c.nome, valor:aloc[i]})) });
+    $('inAporte').value = '';
+    salvarCarteira(false);
+    $('msgAporte').innerHTML = `<span class="pill ok">Aporte de ${fmt(soma)} confirmado e registrado no histórico ✔</span>`;
+  });
+
+  $('tbCat').addEventListener('input', e=>{ if(e.target.dataset.f==='valor') maskMoney(e.target); });
+  $('tbCat').addEventListener('change', e=>{
+    const el = e.target, id = el.dataset.id, f = el.dataset.f; if(!id||!f) return;
+    const c = cat(id); if(!c) return;
+    if((f==='meta' || f==='nome') && !editMetas){ render(); return; }
+    if(f==='nome' && !isFixa(id)) c.nome = el.value.trim().slice(0,40) || 'Sem nome';
+    if(f==='meta'){ c.meta = Math.min(100, numPct(el.value));
+      if(id==='fx_oport' && c.meta < MIN_OPORT){ c.meta = MIN_OPORT; toast(`Oportunidade tem mínimo de ${MIN_OPORT}% de Ações + FII.`); } }
+    if(f==='valor') c.valor = parseMoney(el.value);
+    salvar(); render();
+  });
+  $('tbCat').addEventListener('keydown', e=>{ if(e.key==='Enter' && e.target.tagName==='INPUT') e.target.blur(); });
+  $('tbCat').addEventListener('click', e=>{
+    const btn = e.target.closest('[data-del]'); if(!btn) return;
+    const id = btn.dataset.del, c = cat(id); if(!c || isFixa(id) || !editMetas) return;
+    armar(btn, 'Excluir?', ()=>{ state.categorias = state.categorias.filter(x=>x.id!==id); if(detSel===id) detSel=null; salvar(); render(); toast(`Categoria "${c.nome}" excluída.`); });
+  });
+  $('tbHist').addEventListener('click', e=>{
+    const btn = e.target.closest('[data-hdel]'); if(!btn) return;
+    const idx = parseInt(btn.dataset.hdel,10); if(!(idx>=0 && idx<state.historico.length)) return;
+    armar(btn, 'Remover?', ()=>{ state.historico.splice(idx,1); salvar(); render(); toast('Registro removido do histórico.'); });
+  });
+  $('btnAdd').addEventListener('click', ()=>{
+    if(!editMetas) return;
+    if(state.categorias.length >= 12){ toast('Limite de 12 categorias.'); return; }
+    state.categorias.push({id:uid(), nome:'Nova categoria', meta:0, valor:0}); salvar(); render();
+  });
+
+  $('btnExport').addEventListener('click', ()=>{
+    state.ultimoBackup = new Date().toISOString(); salvar();
+    const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    setTimeout(renderBanner, 0);
+    a.download = 'carteira-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  });
+  $('btnImport').addEventListener('click', ()=> $('fileImport').click());
+  $('fileImport').addEventListener('change', e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try{ const s = JSON.parse(r.result); if(!s || !Array.isArray(s.categorias)) throw 0;
+        state = garantirFixas(s); detSel = null; editMetas = false; backupMetas = null; salvar(); render(); toast('Backup importado ✔'); }
+      catch(err){ toast('Arquivo de backup inválido.'); }
+      e.target.value = '';
+    };
+    r.readAsText(f);
+  });
+  $('btnReset').addEventListener('click', e=>{
+    armar(e.currentTarget, 'Clique de novo para zerar', ()=>{ state = garantirFixas({categorias:[],historico:[]}); detSel = null; editMetas = false; backupMetas = null; salvar(); $('inAporte').value=''; render(); toast('Dados zerados.'); });
+  });
+
+  let tm; window.addEventListener('resize', ()=>{ clearTimeout(tm); tm = setTimeout(()=>{ if(!$('telaPainel').classList.contains('hidden')) desenharGraficos(); },150); });
+  fecharPendentes(); salvar(); render();
+})();
+</script>
+</body>
+</html>
